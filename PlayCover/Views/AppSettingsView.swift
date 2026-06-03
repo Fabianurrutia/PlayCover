@@ -604,6 +604,12 @@ struct BypassesView: View {
                         .help("settings.toggle.blockSleepSpamming.help")
                     Spacer()
                 }
+                HStack {
+                    Toggle("Guard Malloc (diagnostics)", isOn: $settings.settings.mallocGuard)
+                        .help("Inserts /usr/lib/libgmalloc.dylib so heap overflows crash at the "
+                              + "faulting write. Slow and memory-heavy — diagnostics only. Re-signs the app.")
+                    Spacer()
+                }
             }
             .padding()
         }

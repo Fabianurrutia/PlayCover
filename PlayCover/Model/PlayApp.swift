@@ -79,6 +79,10 @@ class PlayApp: BaseApp {
 
             settings.sync()
 
+            // Apply diagnostics env (e.g. Guard Malloc) before signature checks so the
+            // re-signed Info.plist stays valid at launch.
+            syncDiagnosticsEnvironment()
+
             if try !Entitlements.areEntitlementsValid(app: self) {
                 sign()
             }
@@ -268,6 +272,26 @@ extension PlayApp {
         } catch {
             Log.shared.error(error)
             return true
+        }
+    }
+
+    /// Apply diagnostics-related environment variables (currently Guard Malloc) to the app
+    /// according to its settings, re-signing only when the environment actually changes.
+    func syncDiagnosticsEnvironment() {
+        let on = settings.settings.mallocGuard
+        let changed = info.setLSEnvironment([
+            "DYLD_INSERT_LIBRARIES": on ? "/usr/lib/libgmalloc.dylib" : nil,
+            "MallocScribble": on ? "1" : nil,
+            "MALLOC_FILL_SPACE": on ? "1" : nil,
+            // PlayTools reads this to enable PT-TRACE syscall logging (see PlayLoader.m)
+            "PLAYTOOLS_TRACE_SYSCALLS": on ? "1" : nil
+        ])
+        if changed {
+            do {
+                try Shell.signApp(executable)
+            } catch {
+                Log.shared.error(error)
+            }
         }
     }
 

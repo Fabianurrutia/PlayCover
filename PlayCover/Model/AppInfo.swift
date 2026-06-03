@@ -260,6 +260,39 @@ public class AppInfo {
         }
     }
 
+    /// Set or remove several LSEnvironment variables in a single write.
+    /// A nil value removes the key. Returns true if anything changed.
+    @discardableResult
+    func setLSEnvironment(_ vars: [String: String?]) -> Bool {
+        if self[dictionary: "LSEnvironment"] == nil {
+            self[dictionary: "LSEnvironment"] = NSMutableDictionary(dictionary: [String: String]())
+        }
+        guard let dict = self[dictionary: "LSEnvironment"] else { return false }
+
+        var changed = false
+        for (key, value) in vars {
+            let current = dict[key] as? String
+            if let value = value {
+                if current != value {
+                    dict[key] = value
+                    changed = true
+                }
+            } else if current != nil {
+                dict.removeObject(forKey: key)
+                changed = true
+            }
+        }
+
+        if changed {
+            do {
+                try write()
+            } catch {
+                Log.shared.error(error)
+            }
+        }
+        return changed
+    }
+
     func assert(minimumVersion: Double) {
         if let double = Double(minimumOSVersion) {
             if double > 11.0 {

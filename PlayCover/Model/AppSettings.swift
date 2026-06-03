@@ -51,6 +51,9 @@ struct AppSettingsData: Codable {
     var resizableAspectRatioWidth = 0
     var resizableAspectRatioHeight = 0
     var blockSleepSpamming = false
+    // Diagnostics: insert /usr/lib/libgmalloc.dylib (Guard Malloc) into the app to catch
+    // heap overflows at the faulting write instead of letting them corrupt memory silently.
+    var mallocGuard = false
 
     init() {}
 
@@ -92,6 +95,7 @@ struct AppSettingsData: Codable {
         resizableAspectRatioWidth = try container.decodeIfPresent(Int.self, forKey: .resizableAspectRatioWidth) ?? 0
         resizableAspectRatioHeight = try container.decodeIfPresent(Int.self, forKey: .resizableAspectRatioHeight) ?? 0
         blockSleepSpamming = try container.decodeIfPresent(Bool.self, forKey: .blockSleepSpamming) ?? false
+        mallocGuard = try container.decodeIfPresent(Bool.self, forKey: .mallocGuard) ?? false
     }
 }
 
